@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Humaans - HR ninja 🥷</title>
+  <style>
+    :root{ --bg-top:#171132; --bg-bot:#0f172a; --ink:#f8fafc; --muted:#cbd5e1; --glass:rgba(255,255,255,.10); --glass-stroke:rgba(255,255,255,.18); --accent:#ff5a5f; --cta:#ffffff; --cta-text:#171132; }
+    html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial;color:var(--ink);background:radial-gradient(1200px 800px at 50% -10%, var(--bg-top) 0%, var(--bg-top) 60%, var(--bg-bot) 100%);} 
+    *{box-sizing:border-box}
+    .app{position:fixed;inset:0;display:flex;flex-direction:column}
+    .brand{position:absolute;left:16px;top:14px;display:flex;align-items:center;gap:10px;z-index:25}
+    .brand .h{width:28px;height:28px;display:grid;place-items:center;border-radius:8px;background:var(--accent);color:#fff;font-weight:900;box-shadow:0 6px 14px rgba(255,90,95,.45)}
+    .brand .word{font-weight:900;letter-spacing:.3px;color:var(--accent)}
+    .topbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:center;padding:18px;z-index:20}
+    .title{padding:8px 14px;border-radius:12px;background:var(--glass);backdrop-filter:blur(8px);border:1px solid var(--glass-stroke);font-weight:800;font-size:24px}
+    .cta{position:absolute;right:16px;top:14px;background:var(--cta);color:var(--cta-text);padding:10px 16px;border-radius:10px;font-weight:800;box-shadow:0 10px 22px rgba(0,0,0,.35);text-decoration:none;z-index:20}
+    .hud{position:absolute;left:16px;top:58px;display:flex;gap:10px;z-index:20;align-items:center;flex-wrap:wrap;max-width:72vw}
+    .hud .pill{background:var(--glass);border:1px solid var(--glass-stroke);padding:8px 10px;border-radius:999px;font-weight:700}
+    .hud .stack{display:flex;gap:6px;align-items:center;background:var(--glass);border:1px solid var(--glass-stroke);padding:6px 8px;border-radius:999px}
+    .hud .stack small{opacity:.8}
+    .hud button{background:var(--glass);border:1px solid var(--glass-stroke);border-radius:999px;padding:8px 10px;color:var(--ink);cursor:pointer}
+    .frame{position:relative;flex:1;margin:70px 16px 16px;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    canvas{display:block;width:100%;height:100%}
+    .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:transparent;backdrop-filter:none;z-index:30;pointer-events:auto}
+    .card{background:rgba(28,31,48,.92);border:1px solid var(--glass-stroke);padding:26px 26px 16px;border-radius:16px;text-align:left;box-shadow:0 20px 40px rgba(0,0,0,.45);max-width:min(820px,92vw)}
+    .card h1{margin:0 0 8px;font-size:28px;text-align:center}
+    .card p{margin:0 0 12px;opacity:.95;text-align:center}
+    .tagline{margin:0 0 12px;text-align:center;line-height:1.5}
+    .tagline .sep{opacity:.55;margin:0 .5em}
+    .logoHero{width:min(460px,62vw);height:auto;display:block;margin:4px auto 12px auto} 
+    .how{background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.18);border-radius:12px;padding:12px 12px 6px;margin:14px 0;display:none}
+    .rules{margin:0;padding-left:18px}
+    .rules li{margin:6px 0 10px 0}
+    .rules .sub{margin:6px 0 6px 0;padding-left:18px}
+    .actions{display:flex;gap:12px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+    .btn{border:none;border-radius:12px;padding:12px 18px;font-weight:800;cursor:pointer}
+    .btn.primary{background:var(--cta);color:var(--cta-text)}
+    .btn.ghost{background:transparent;border:1px solid var(--glass-stroke);color:var(--ink)}
+    .legend{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:14px;align-items:center;opacity:.85;z-index:20}
+    .legend .tag{display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--glass-stroke);padding:8px 12px;border-radius:999px;font-weight:700}
+    .tag .bomb{filter:drop-shadow(0 4px 6px rgba(0,0,0,.35))}
+    .flowBadge{position:absolute;top:14px;right:16px;z-index:20;background:linear-gradient(135deg, rgba(255,90,95,.95), rgba(255,90,95,.65)); color:#100b25;padding:8px 12px;border-radius:999px;font-weight:900;letter-spacing:.5px;display:none;border:1px solid rgba(255,255,255,.45);text-shadow:0 1px 0 rgba(255,255,255,.25)}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="brand"><div class="h">H</div><div class="word">Humaans</div></div>
+  <div class="topbar"><div class="title"><span style="color:var(--accent);font-weight:900">Humaans</span> - HR ninja 🥷</div></div>
+  <a class="cta" href="https://humaans.io/book-demo" target="_blank" rel="noopener">Book a demo</a>
+  <div class="hud">
+    <div class="pill" id="score">Score: 0</div>
+    <div class="pill" id="best">Best: 0</div>
+    <div class="pill" id="lives">Lives: 3</div>
+    <div class="pill" id="combo">Combo: 0</div>
+    <div class="stack" id="powers">
+      <span>⭐︎</span><small id="doubler">x1</small>
+      <span>🕒</span><small id="slow">0s</small>
+      <span>🛡️</span><small id="shield">0</small>
+      <span>🎉</span><small id="frenzy">0s</small>
+    </div>
+    <button id="mute">Mute</button>
+  </div>
+  <div class="flowBadge" id="flowBadge">FLOW</div>
+  <div class="frame">
+    <canvas id="game" aria-label="Humaans HR Ninja game canvas"></canvas>
+    <div id="overlay" class="overlay">
+      <div class="card" id="overlay-card">
+        <img class="logoHero" src="humaans_hr_ninja_logo.png" loading="lazy" alt="Humaans - HR ninja logo" />
+        <h1>Humaans - HR ninja 🥷</h1>
+        <p class="tagline">🧾 Slice the <b>HR headaches</b>. <span class="sep">•</span> 💣 Avoid the bombs. <span class="sep">•</span> ⭐ Power‑ups help you score big. <span class="sep">•</span> 💫 Build combos to enter <b>FLOW</b>.</p>
+        <div class="how" id="rulesPanel"></div>
+        <div class="actions">
+          <button id="start-btn" class="btn primary" onclick="startGame()">Start game</button>
+          <button class="btn ghost" onclick="toggleRules()">How to Play</button>
+        </div>
+      </div>
+    </div>
+    <div class="legend" aria-hidden="true">
+      <div class="tag"><span>🧾</span><span>HRIS headaches</span></div>
+      <div class="tag"><span class="bomb">💣</span><span>Bomb</span></div>
+      <div class="tag"><span>⭐︎ 🕒 🛡️ 🎉</span><span>Power‑ups</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Config ----------
+const HR_ITEMS=[
+  {emoji:'📄',title:'Manual onboarding forms'},
+  {emoji:'📊',title:'Spreadsheet chaos'},
+  {emoji:'🧾',title:'Compliance audit stress'},
+  {emoji:'⛔️',title:'System outages'},
+  {emoji:'💸',title:'Payroll errors'},
+  {emoji:'🗂️',title:'Scattered docs'},
+  {emoji:'💬',title:'Manager complaints'},
+  {emoji:'🩺',title:'Benefits confusion'},
+  {emoji:'⌨️',title:'Manual data entry'},
+  {emoji:'🔁',title:'Messy approvals'},
+  {emoji:'🧱',title:'Data silos'}
+];
+const POWER_ITEMS=[
+  {emoji:'⭐︎',effect:'double',title:'Score Doubler',duration:6500},
+  {emoji:'🕒',effect:'slow',title:'Slow‑mo',duration:6000},
+  {emoji:'🛡️',effect:'shield',title:'Bomb Shield',duration:0},
+  {emoji:'🎉',effect:'frenzy',title:'Frenzy (no bombs)',duration:6000}
+];
+
+const SLICE_PHRASES=[
+  'Source of truth','Headache resolved','Audit‑ready','Onboarding automated','Data synced','Compliance handled','Docs centralised','Payroll aligned','Approvals streamlined','Visibility restored','Single record of employee'
+];
+const HR_FAILINGS=[
+  'Payroll missed cut‑off — underpayments risk',
+  'No single source of truth — duplicate employee records',
+  'Compliance lapse — right‑to‑work expired',
+  'Terminations not synced — paid past leave date',
+  'Onboarding bottleneck — day‑one access failed',
+  'PII scattered in spreadsheets — data breach risk',
+  'Leave balances out of sync — accrual errors',
+  'Approvals stuck — manager bottleneck',
+  'Audit trail missing — failed compliance check'
+];
+
+const SCORE_TO_COMPLETE=25, GRAVITY=0.32, BASE_SIZE=76, BATCH_MIN=2, BATCH_MAX=3, RESHUFFLE_HISTORY=4, MAX_LIVES=3, BOMB_PROB_BASE=0.12, BOMB_PROB_MAX=0.28, COMBO_WINDOW=520, STREAK_TIME=2200;
+
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+function resize(){canvas.width=canvas.clientWidth;canvas.height=canvas.clientHeight}
+window.addEventListener('resize',resize);resize();
+
+const overlay=document.getElementById('overlay');
+const overlayCard=document.getElementById('overlay-card');
+let started=false, items=[], bladePath=[], score=0, best=+(localStorage.getItem('hrn-best')||0), muted=false, lives=MAX_LIVES, livesMode=false;
+
+// Combos & flow
+let combo=0, lastSliceTime=0, flow=false, flowUntil=0;
+let streakMult=1, streakUntil=0;
+
+// Power‑ups state
+const power={doublerUntil:0, slowUntil:0, shield:0, frenzyUntil:0};
+
+// ---------- Human rules copy with emojis ----------
+function rulesHTML(){
+  return `
+    <h3 style="margin:0 0 8px 0">How to Play</h3>
+    <ul class="rules">
+      <li>Slice <b>HR headaches</b> 🧾 for points. Avoid <b>bombs</b> 💣 — each costs a life ❤️, and you start with <b>${MAX_LIVES}</b>.</li>
+      <li>Slice items fast (within <b>${COMBO_WINDOW}ms</b>) for <b>combos</b> ⚡️; five in a row triggers <b>FLOW</b> 💫. Swipe through two or more at once for a score multiplier ✖️.</li>
+      <li><b>Power‑ups:</b>
+        <ul class="sub">
+          <li>⭐ <b>Doubler</b> — doubles your points for a short time.</li>
+          <li>🕒 <b>Slow‑mo</b> — slows items so you can slice more easily.</li>
+          <li>🛡️ <b>Shield</b> — protects you from losing a life if you hit a bomb.</li>
+          <li>🎉 <b>Frenzy</b> — floods the screen with items for rapid scoring.</li>
+        </ul>
+      </li>
+      <li>🎯 Clear <b>${SCORE_TO_COMPLETE}</b> headaches to unlock <b>Lives Mode</b>.</li>
+      <li>💡 <i>Tip:</i> long, diagonal slashes catch more items for streaks.</li>
+    </ul>`;
+}
+
+function toggleRules(){ const panel=document.getElementById('rulesPanel'); if(!panel) return; if(panel.style.display==='none'||panel.style.display===''){ panel.innerHTML=rulesHTML(); panel.style.display='block'; } else { panel.style.display='none'; } }
+
+// ---------- Audio ----------
+const AC=(window.AudioContext||window.webkitAudioContext);
+const audio=AC?new AC():null;
+function tone(freq,dur=0.14,type='triangle',volEnd=0.2){
+  if(!audio||muted) return; const o=audio.createOscillator(), g=audio.createGain();
+  o.type=type; o.frequency.value=freq; g.gain.value=0.0001; o.connect(g); g.connect(audio.destination);
+  const now=audio.currentTime; g.gain.exponentialRampToValueAtTime(Math.max(0.001,volEnd),now+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,now+dur); o.start(now); o.stop(now+dur+0.02);
+}
+const blip=()=>tone(720,0.1,'triangle',0.25);
+const boom=()=>tone(120,0.3,'sawtooth',0.35);
+const chime=()=>tone(980,0.25,'sine',0.3);
+
+// ---------- Effects state ----------
+const particles=[];   // {x,y,vx,vy,a,size,rot,vr,kind}
+const rings=[];       // {x,y,r,w,a,dr}
+const stains=[];      // background stains
+const slashes=[];     // {x1,y1,x2,y2,a,w,kind}
+let flash=0; let shake=0;
+
+function spawnBurst(x,y,count=16,speed=4,kind='hr'){
+  for(let i=0;i<count;i++){
+    const ang=Math.random()*Math.PI*2;
+    const sp=speed*(0.5+Math.random());
+    particles.push({ x,y, vx:Math.cos(ang)*sp, vy:Math.sin(ang)*sp-(kind==='hr'?1:0), a:1, size:kind==='bomb'?3+Math.random()*4:2+Math.random()*3, rot:Math.random()*Math.PI, vr:(Math.random()-0.5)*0.3, kind });
+  }
+}
+function addRing(x,y,baseR=14,w=3,dr=2.4){ rings.push({x,y,r:baseR,w,a:1,dr}) }
+function addFlash(alpha=0.6){ flash=Math.max(flash,alpha) }
+function kickShake(power=12){ shake=Math.max(shake,power) }
+function addStainsAlong(x1,y1,x2,y2){ for(let i=0;i<8;i++){ const t=i/7; const x=x1+(x2-x1)*t+(Math.random()-0.5)*10; const y=y1+(y2-y1)*t+(Math.random()-0.5)*10; stains.push({x,y,r:6+Math.random()*12,a:0.16}) } }
+function addSlash(x1,y1,x2,y2,kind='hr'){ slashes.push({x1,y1,x2,y2,a:0.9,w:18,kind}) }
+
+// ---------- Bag/randomisation ----------
+let bag=[], recent=[]; function refillBag(){ bag=HR_ITEMS.slice().sort(()=>Math.random()-0.5) }
+function nextHR(){ if(bag.length===0) refillBag(); let idx=bag.findIndex(d=>!recent.includes(d.title)); if(idx===-1) idx=0; const def=bag.splice(idx,1)[0]; recent.push(def.title); if(recent.length>RESHUFFLE_HISTORY) recent.shift(); return def; }
+
+// ---------- Call‑outs (colour-aware) ----------
+const callouts=[];
+function addCallout(text,x,y,color='#ffffff'){ callouts.push({text,x,y,vy:-1.4,alpha:1,color}); }
+function drawCallouts(){ for(const c of callouts){ ctx.save(); ctx.globalAlpha=Math.max(0,c.alpha); ctx.translate(c.x,c.y); ctx.font=`800 20px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial`; ctx.fillStyle=c.color||'#ffffff'; ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=3; ctx.textAlign='center'; ctx.strokeText(c.text,0,0); ctx.fillText(c.text,0,0); ctx.restore(); c.y+=c.vy; c.alpha-=0.02; } for(let i=callouts.length-1;i>=0;i--){ if(callouts[i].alpha<=0) callouts.splice(i,1); } }
+
+// ---------- Entities ----------
+let lastFailingMsg=''; let bombPhraseIndex=0;
+class Item{
+  constructor(kind){
+    this.kind=kind;
+    if(kind==='hr'){ const def=nextHR(); this.emoji=def.emoji; this.title=def.title; }
+    else if(kind==='bomb'){ this.emoji='💣'; this.title='BOMB'; }
+    else { const p=POWER_ITEMS[(Math.random()*POWER_ITEMS.length)|0]; this.emoji=p.emoji; this.effect=p.effect; this.powerTitle=p.title; this.duration=p.duration; this.title=p.title; }
+    this.size=BASE_SIZE+Math.random()*18;
+    const mode=Math.random();
+    if(mode<0.65){ this.x=Math.random()*canvas.width; this.y=canvas.height+60; const angle=(Math.random()*1.1+0.25)*(Math.random()<0.5?-1:1); this.vx=Math.sin(angle)*(3.2+Math.random()*4.2); this.vy=-(12+Math.random()*10); }
+    else{ const fromLeft=Math.random()<0.5; this.x=fromLeft?-40:canvas.width+40; this.y=canvas.height*0.45+Math.random()*canvas.height*0.45; this.vx=(fromLeft?1:-1)*(5+Math.random()*4.5); this.vy=-(9+Math.random()*6); }
+    this.rot=0; this.vr=(Math.random()-.5)*0.08; this.sliced=false; this.dead=false; this.halves=null;
+  }
+  update(ts){ if(this.dead) return; this.x+=this.vx*ts; this.y+=this.vy*ts; this.vy+=GRAVITY*ts; this.rot+=this.vr*ts; if(this.y>canvas.height+160||this.x<-160||this.x>canvas.width+160){ this.dead=true; if(this.kind==='hr' && livesMode && !this.sliced){ lives--; if(lives<=0){ endGame('lives'); } } } }
+  draw(){ if(this.dead) return; ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.rot); ctx.textAlign='center'; ctx.textBaseline='middle'; if(!this.sliced){ ctx.font=`${this.size}px serif`; ctx.fillText(this.emoji,0,0); const label=this.kind==='hr'?this.title:(this.kind==='bomb'?'BOMB':this.title); ctx.font=`900 ${(this.size*0.28)|0}px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial`; ctx.fillStyle=this.kind==='bomb'?'#ffadad':'rgba(255,255,255,.95)'; ctx.shadowColor='rgba(0,0,0,.35)'; ctx.shadowBlur=10; ctx.fillText(label,0,-this.size*0.95); } else if(this.halves&&this.halves.left&&this.halves.right){ const {left,right}=this.halves; drawHalf(this,left); drawHalf(this,right); } else { this.dead=true; } ctx.restore(); }
+  trySlice(px,py){ if(this.sliced||this.dead) return false; const r=this.size*0.6, dx=px-this.x, dy=py-this.y; if(dx*dx+dy*dy<=r*r){ this.sliced=true; if(this.kind==='bomb'){ if(power.shield>0){ power.shield--; spawnExplosion(this.x,this.y,false); addCallout('Shield saved you', this.x, this.y-36, '#9ae6b4'); } else { boom(); spawnExplosion(this.x,this.y,true); lives=Math.max(0,lives-1); addCallout(`Life lost – ${lives} left`, this.x, this.y-36, '#ff5a5f'); if(lives<=0){ setTimeout(()=>endGame('bomb'),450); } } this.halves={left:{dx:-4,dy:-2,rot:-0.12,a:1}, right:{dx:4,dy:-2,rot:0.12,a:1}}; return true; } if(this.kind==='power'){ applyPower(this); blip(); spawnBurst(this.x,this.y,14,4,'hr'); addRing(this.x,this.y,16,3,2.2); const sp=3+Math.random()*1.5; this.halves={left:{dx:-sp,dy:-sp*0.35,rot:-0.1,a:1}, right:{dx:sp,dy:-sp*0.35,rot:0.1,a:1}}; return true; } blip(); const gained=getScoreGain(); score+=gained; spawnBurst(this.x,this.y,14,4,'hr'); addRing(this.x,this.y,16,3,2.2); const phrase=(score>=SCORE_TO_COMPLETE && !livesMode)?'Level complete – lives on!':SLICE_PHRASES[(Math.random()*SLICE_PHRASES.length)|0]; addCallout(phrase,this.x,this.y-30); if(score>=SCORE_TO_COMPLETE && !livesMode){ livesMode=true; } localStorage.setItem('hrn-best', best=Math.max(best,score)); const speed=4+Math.random()*2.5; this.halves={left:{dx:-speed,dy:-speed*0.4,rot:-0.12,a:1}, right:{dx:speed,dy:-speed*0.4,rot:0.12,a:1}}; registerSlice(); return true; } return false; }
+}
+function drawHalf(item,h){ ctx.save(); ctx.globalAlpha=Math.max(0,h.a); ctx.translate(item.x,item.y); ctx.rotate(h.rot); ctx.font=`${item.size}px serif`; ctx.fillText(item.emoji,h.dx*10,h.dy*10); ctx.restore(); h.dy+=0.18; h.dx*=0.99; h.a-=0.02; h.rot+=(h.rot>0?0.01:-0.01) }
+
+function spawnExplosion(x,y,isFail){
+  spawnBurst(x,y,60,8,'bomb'); addRing(x,y,22,5,3.2); addRing(x,y,44,3,2.6); addFlash(isFail?0.7:0.45); kickShake(isFail?18:10);
+  if(isFail){ lastFailingMsg = HR_FAILINGS[bombPhraseIndex % HR_FAILINGS.length]; bombPhraseIndex++; addCallout(lastFailingMsg,x,y-38,'#ff5a5f'); } else { addCallout('Nice try – but not today.',x,y-38); }
+}
+
+// ---------- Spawning ----------
+let lastSpawn=0, spawnDelay=1000;
+function allowBombs(){ const now=performance.now(); return !(flow || now<power.frenzyUntil); }
+function maybeAddPower(){ return Math.random()<0.22; }
+function spawnBatch(){ const n=Math.floor(Math.random()*(BATCH_MAX-BATCH_MIN+1))+BATCH_MIN; let bombSpawned=false; const batch=[]; for(let i=0;i<n;i++){ const pBomb=Math.min(BOMB_PROB_MAX, BOMB_PROB_BASE + score*0.01); const shouldBomb=allowBombs() && !bombSpawned && Math.random()<pBomb; const kind=shouldBomb?'bomb':'hr'; batch.push(new Item(kind)); if(shouldBomb) bombSpawned=true; } if(maybeAddPower()){ batch.push(new Item('power')); } items.push(...batch); }
+
+// ---------- Main loop ----------
+function getTimeScale(now){ if(!now) now=performance.now(); return (flow || now<power.slowUntil) ? 0.65 : 1; }
+function loop(t){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save(); ctx.globalAlpha=0.06; for(let i=0;i<40;i++){ ctx.fillRect((i*73)%canvas.width,(i*211)%canvas.height,2,2) } ctx.restore();
+  const ts=getTimeScale(t);
+  for(const it of items){ it.update(ts); it.draw(); }
+  items=items.filter(it=>!(it.dead && (!it.halves || (it.halves.left?.a<=0 && it.halves.right?.a<=0))));
+  if(started && (t-lastSpawn)>spawnDelay){ spawnBatch(); lastSpawn=t; spawnDelay=1100-Math.min(600,score*8)+Math.random()*220; }
+  if(flow && t>flowUntil){ flow=false; const fb=document.getElementById('flowBadge'); if(fb){ fb.style.display='none'; } }
+  if(t>streakUntil) streakMult=1;
+  document.getElementById('score').textContent=`Score: ${score}`;
+  document.getElementById('best').textContent=`Best: ${best}`;
+  document.getElementById('lives').textContent=`Lives: ${lives}`;
+  const now=performance.now();
+  const comboEl=document.getElementById('combo'); if(comboEl) comboEl.textContent=`Combo: ${combo} • Streak ×${streakMult}`;
+  const d=document.getElementById('doubler'); if(d) d.textContent = now<power.doublerUntil ? 'x2' : 'x1';
+  const s=document.getElementById('slow'); if(s) s.textContent = Math.max(0,Math.ceil((power.slowUntil-now)/1000))+'s';
+  const sh=document.getElementById('shield'); if(sh) sh.textContent = power.shield;
+  const f=document.getElementById('frenzy'); if(f) f.textContent = Math.max(0,Math.ceil((power.frenzyUntil-now)/1000))+'s';
+  drawBlade(t);
+  drawCallouts();
+  drawEffects();
+  requestAnimationFrame(loop);
+}
+
+// ---------- Blade & slicing ----------
+function drawBlade(t){
+  bladePath=bladePath.filter(p=>t-p.t<220); if(bladePath.length<2) return; ctx.lineCap='round'; ctx.lineJoin='round';
+  for(let i=1;i<bladePath.length;i++){
+    const a=bladePath[i-1], b=bladePath[i]; const age=(t-b.t)/220; const w=Math.max(1,6*(1-age)); ctx.strokeStyle=`rgba(248,250,252,${1-Math.min(1,age)})`; ctx.lineWidth=w; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    let hits=0; for(const it of items){ if(!it.sliced){ if(it.trySlice(b.x,b.y)){ addSlash(a.x,a.y,b.x,b.y,it.kind); if(it.kind==='hr' || it.kind==='power'){ addStainsAlong(a.x,a.y,b.x,b.y); } hits++; } } }
+    if(hits>=2){ triggerStreak(hits, a.x,a.y,b.x,b.y); }
+  }
+}
+
+let down=false; const addPoint=(x,y)=>bladePath.push({x,y,t:performance.now()});
+canvas.addEventListener('pointerdown',e=>{down=true; if(audio&&audio.state==='suspended') audio.resume(); addPoint(e.offsetX,e.offsetY)});
+canvas.addEventListener('pointermove',e=>{ if(!down) return; addPoint(e.offsetX,e.offsetY)});
+window.addEventListener('pointerup',()=>down=false);
+
+// ---------- Controls ----------
+const muteBtn=document.getElementById('mute');
+muteBtn.addEventListener('click',()=>{ muted=!muted; muteBtn.textContent=muted?'Unmute':'Mute' });
+
+function getScoreGain(){ const now=performance.now(); const doubled=now<power.doublerUntil; const inFlow=flow; const streak=now<streakUntil?streakMult:1; return (doubled?2:1)*(inFlow?2:1)*streak; }
+function registerSlice(){ const now=performance.now(); if(now-lastSliceTime<=COMBO_WINDOW){ combo++; if(combo>=3) addCallout(`${combo} combo!`, canvas.width*0.5, canvas.height*0.2); if(combo===5) triggerFlow(); } else { combo=1; } lastSliceTime=now; }
+function triggerFlow(){ flow=true; flowUntil=performance.now()+6000; const fb=document.getElementById('flowBadge'); if(fb){ fb.style.display='inline-flex'; } addCallout('FLOW state', canvas.width/2, canvas.height*0.25); chime(); kickShake(8); }
+function triggerStreak(n,x1,y1,x2,y2){ const now=performance.now(); streakMult=Math.min(4,1+n); streakUntil=now+STREAK_TIME; addCallout(`${n}-slash streak ×${streakMult}!`, (x1+x2)/2, (y1+y2)/2 - 24); kickShake(10+n*2); addRing((x1+x2)/2,(y1+y2)/2, 24+6*n, 4, 3); spawnBurst((x1+x2)/2,(y1+y2)/2, 22+6*n, 5+n*0.8, 'hr'); }
+function applyPower(it){ const now=performance.now(); if(it.effect==='double'){ power.doublerUntil=Math.max(power.doublerUntil, now+it.duration); addCallout('Score Doubler', it.x, it.y-30); } else if(it.effect==='slow'){ power.slowUntil=Math.max(power.slowUntil, now+it.duration); addCallout('Slow‑mo', it.x, it.y-30); } else if(it.effect==='shield'){ power.shield=Math.min(3, power.shield+1); addCallout('Shield +1', it.x, it.y-30); } else if(it.effect==='frenzy'){ power.frenzyUntil=Math.max(power.frenzyUntil, now+it.duration); addCallout('Frenzy (no bombs)', it.x, it.y-30); } }
+
+// ---------- Overlay flows ----------
+function setStartOverlay(){
+  overlay.style.display='flex';
+  overlayCard.innerHTML=`
+    <img class="logoHero" src="humaans_hr_ninja_logo.png" loading="lazy" alt="Humaans - HR ninja logo" />
+        <h1>Humaans - HR ninja 🥷</h1>
+    <p class="tagline">🧾 Slice the <b>HR headaches</b>. <span class="sep">•</span> 💣 Avoid the bombs. <span class="sep">•</span> ⭐ Power‑ups help you score big. <span class="sep">•</span> 💫 Build combos to enter <b>FLOW</b>.</p>
+    <div class="how" id="rulesPanel"></div>
+    <div class="actions">
+      <button class="btn primary" onclick="startGame()">Start game</button>
+      <button class="btn ghost" onclick="toggleRules()">How to Play</button>
+    </div>`;
+}
+
+window.startGame=function startGame(){ overlay.style.display='none'; started=true; score=0; items=[]; refillBag(); lives=MAX_LIVES; livesMode=false; callouts.length=0; particles.length=0; rings.length=0; slashes.length=0; stains.length=0; flash=0; shake=0; combo=0; power.doublerUntil=0; power.slowUntil=0; power.frenzyUntil=0; power.shield=0; streakMult=1; streakUntil=0; flow=false; const fb=document.getElementById('flowBadge'); if(fb){ fb.style.display='none'; } spawnBatch(); lastSpawn=performance.now(); };
+
+function endGame(reason='generic'){
+  started=false; overlay.style.display='flex';
+  const sub=`You hit ${score}. Your personal best is ${best}.`;
+  overlayCard.innerHTML=`
+    <img class="logoHero" src="humaans_hr_ninja_logo.png" loading="lazy" alt="Humaans - HR ninja logo" />
+    <h1>You've got 99 problems but HR shouldn't be one.</h1>
+    <p>${sub}</p>
+    <div class="how" id="rulesPanel"></div>
+    <div class="actions">
+      <a class="btn primary" href="https://humaans.io/book-demo" target="_blank" rel="noopener">Book a demo</a>
+      <button class="btn ghost" onclick="startGame()">Play again</button>
+      <button class="btn ghost" onclick="toggleRules()">How to Play</button>
+    </div>`;
+}
+
+// Initial overlay setup
+setStartOverlay();
+
+// ---------- Effects renderer ----------
+function drawEffects(){
+  for(const s of stains){ ctx.save(); ctx.globalAlpha=s.a; ctx.fillStyle='rgba(255,255,255,.15)'; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); ctx.restore(); s.a*=0.995; }
+  for(let i=stains.length-1;i>=0;i--){ if(stains[i].a<0.02) stains.splice(i,1); }
+  for(const sl of slashes){ ctx.save(); ctx.globalAlpha=sl.a; ctx.lineCap='round'; ctx.lineWidth=sl.w; ctx.strokeStyle = sl.kind==='bomb' ? 'rgba(255,90,95,0.9)' : 'rgba(248,250,252,0.95)'; ctx.beginPath(); ctx.moveTo(sl.x1,sl.y1); ctx.lineTo(sl.x2,sl.y2); ctx.stroke(); ctx.restore(); sl.a-=0.03; sl.w*=0.96; }
+  for(let i=slashes.length-1;i>=0;i--){ if(slashes[i].a<=0.02) slashes.splice(i,1); }
+  for(const p of particles){ ctx.save(); ctx.globalAlpha=p.a; ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle = p.kind==='bomb'? 'rgba(255,90,95,0.9)' : 'rgba(248,250,252,0.9)'; ctx.fillRect(-p.size*0.5,-p.size*0.5, p.size, p.size); ctx.restore(); p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.rot+=p.vr; p.a-=0.012; }
+  for(let i=particles.length-1;i>=0;i--){ if(particles[i].a<=0) particles.splice(i,1); }
+  for(const r of rings){ ctx.save(); ctx.globalAlpha=r.a; ctx.lineWidth=r.w; ctx.strokeStyle='rgba(248,250,252,0.9)'; ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,Math.PI*2); ctx.stroke(); ctx.restore(); r.r+=r.dr; r.a-=0.02; }
+  for(let i=rings.length-1;i>=0;i--){ if(rings[i].a<=0) rings.splice(i,1); }
+  if(shake>0){ ctx.save(); ctx.translate((Math.random()-0.5)*shake, (Math.random()-0.5)*shake); ctx.restore(); shake*=0.88; if(shake<0.6) shake=0; }
+  if(flash>0){ ctx.save(); ctx.globalAlpha=flash; ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.restore(); flash-=0.05; if(flash<0) flash=0; }
+}
+
+// ---------- Mini smoke tests (console) ----------
+(function runTests(){
+  const results=[]; const test=(name,fn)=>{ try{ fn(); results.push(['PASS',name]); } catch(e){ console.error(e); results.push(['FAIL',name,e.message]); } };
+  test('rules button starts hidden', ()=>{ const p=document.getElementById('rulesPanel'); if(!p||p.style.display!=='none') throw new Error('rules not hidden'); });
+  test('legend shows plain Bomb', ()=>{ if(!document.body.innerHTML.includes('>Bomb<')) throw new Error('legend text wrong'); });
+  test('title bar updated', ()=>{ if(!document.body.innerHTML.includes('HR ninja 🥷')) throw new Error('title not updated'); });
+  console.log('[HR Ninja smoke tests]', results);
+})();
+
+// ---------- Start loop ----------
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
